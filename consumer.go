@@ -88,10 +88,6 @@ func New(o Options) *Consumer {
 		c.batchSize = 10
 	}
 
-	if c.waitTimeSeconds == 0 {
-		c.waitTimeSeconds = 20
-	}
-
 	if o.ShouldDeleteMessages != aws.UnknownTernary {
 		c.shouldDeleteMessages = o.ShouldDeleteMessages.Bool()
 	}
