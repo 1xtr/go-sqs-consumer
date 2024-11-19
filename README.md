@@ -5,7 +5,7 @@
 
 Very simple consumer for proceed messages from queue there we can set:
  - batchSize (Max 10, default 1)
- - waitTimeSeconds (Default is 20s)
+ - waitTimeSeconds (Default is 0s)
  - MessageAttributeNames (Default [])
  - messageSystemAttributeNames (Default [])
  - pollDelayInMs (default 0)
