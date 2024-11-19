@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/1xtr/go-sqs-consumer/compare/v1.1.0...v1.2.0) (2024-11-19)
+
+
+### Features
+
+* updated waitForProcessing method for use PollDelayInMs ([0c1be5b](https://github.com/1xtr/go-sqs-consumer/commit/0c1be5b5410bc3529353f5b4a3ccf2bdd18c19a3))
+
 # [1.1.0](https://github.com/1xtr/go-sqs-consumer/compare/v1.0.1...v1.1.0) (2024-11-19)
 
 
