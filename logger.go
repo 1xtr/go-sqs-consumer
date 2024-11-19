@@ -20,7 +20,7 @@ var (
 
 func init() {
 	// Get log level from environment variable
-	logLevelStr := strings.ToLower(os.Getenv("LOG_LEVEL"))
+	logLevelStr := strings.ToLower(os.Getenv("CONSUMER_LOG_LEVEL"))
 
 	logLevel := zerolog.WarnLevel
 
