@@ -116,10 +116,6 @@ func (c *Consumer) Start() {
 	close(c.messagesChannel)
 }
 
-func (c *Consumer) wait() {
-	time.Sleep(time.Millisecond * time.Duration(c.pollDelayInMs))
-}
-
 // waitForProcessing ensures that all messages in the current batch are processed before fetching new messages.
 func (c *Consumer) waitForProcessing() {
 	// Wait for the message channel to drain
