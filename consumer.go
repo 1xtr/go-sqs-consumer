@@ -21,7 +21,7 @@ type (
 		stopSignal                  chan os.Signal
 		messagesChannel             chan types.Message
 		batchSize                   int
-		pollDelayInMs               int
+		pollDelayInMs               time.Duration
 		visibilityTimeout           int
 		waitTimeSeconds             int
 		MessageAttributeNames       []string
@@ -33,7 +33,7 @@ type (
 		QueueUrl                    string
 		SqsClient                   *sqs.Client
 		BatchSize                   int
-		pollDelayInMs               int
+		PollDelayInMs               int
 		VisibilityTimeout           int
 		WaitTimeSeconds             int
 		MessageAttributeNames       []string
@@ -56,7 +56,7 @@ func New(o Options) *Consumer {
 		stopSignal:                  make(chan os.Signal, 1),
 		messagesChannel:             make(chan types.Message),
 		batchSize:                   o.BatchSize,
-		pollDelayInMs:               o.pollDelayInMs,
+		pollDelayInMs:               time.Duration(o.PollDelayInMs) * time.Millisecond,
 		visibilityTimeout:           o.VisibilityTimeout,
 		waitTimeSeconds:             o.WaitTimeSeconds,
 		MessageAttributeNames:       o.MessageAttributeNames,
@@ -123,8 +123,14 @@ func (c *Consumer) wait() {
 // waitForProcessing ensures that all messages in the current batch are processed before fetching new messages.
 func (c *Consumer) waitForProcessing() {
 	// Wait for the message channel to drain
-	for len(c.messagesChannel) > 0 {
-		time.Sleep(100 * time.Millisecond) // Small delay to check channel status
+	for {
+		// If the message channel is empty, wait for pollDelay before re-checking
+		if len(c.messagesChannel) == 0 {
+			time.Sleep(c.pollDelayInMs)
+			return
+		}
+		// If the message channel is not empty, wait for it to drain
+		time.Sleep(100 * time.Millisecond) // Small delay to re-check channel status
 	}
 }
 
