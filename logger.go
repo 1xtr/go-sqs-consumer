@@ -20,10 +20,9 @@ var (
 
 func init() {
 	// Get log level from environment variable
-	logLevelStr := strings.ToLower(os.Getenv("LOG_LEVEL"))
+	logLevelStr := strings.ToLower(os.Getenv("CONSUMER_LOG_LEVEL"))
 
-	// Default log level if not provided or invalid
-	logLevel := zerolog.InfoLevel
+	logLevel := zerolog.WarnLevel
 
 	if logLevelStr != "" {
 		switch logLevelStr {
