@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/1xtr/go-sqs-consumer/compare/v1.0.1...v1.1.0) (2024-11-19)
+
+
+### Features
+
+* rename consumer log level environment "LOG_LEVEL" => "CONSUMER_LOG_LEVEL" ([3664912](https://github.com/1xtr/go-sqs-consumer/commit/3664912ab903391550d6b96cb690cc54960e36e7))
+* set consumer default log level to `warning` ([73c6cc4](https://github.com/1xtr/go-sqs-consumer/commit/73c6cc4f1ec51c832c2c0ebf5a21cd0c26b9de3e))
+
 ## [1.0.1](https://github.com/1xtr/go-sqs-consumer/compare/v1.0.0...v1.0.1) (2024-11-19)
 
 
