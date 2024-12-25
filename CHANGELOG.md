@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/1xtr/go-sqs-consumer/compare/v2.0.0...v2.1.0) (2024-12-25)
+
+
+### Features
+
+* added batch handler ([cc0ef53](https://github.com/1xtr/go-sqs-consumer/commit/cc0ef5382e4871ee16183a643dd11692db4743f7))
+
 # [2.0.0](https://github.com/1xtr/go-sqs-consumer/compare/v1.2.1...v2.0.0) (2024-12-25)
 
 
