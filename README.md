@@ -8,7 +8,7 @@ Very simple consumer for proceed messages from queue there we can set:
  - waitTimeSeconds (Default is 0s, so used delay from queue params)
  - MessageAttributeNames (Default [])
  - messageSystemAttributeNames (Default [])
- - pollDelayInMs (default 0)
+ - pollDelayInMs (default 100)
  - visibilityTimeout (default 0)
  - shouldDeleteMessages flag for cases there don't need to delete the message (Default true - delete message)
 
