@@ -21,7 +21,19 @@
   },
   "release": {
     "branches": [
-      "main"
+      "+([0-9])?(.{+([0-9]),x}).x",
+      "master",
+      "main",
+      "next",
+      "next-major",
+      {
+        "name": "beta",
+        "prerelease": true
+      },
+      {
+        "name": "alpha",
+        "prerelease": true
+      }
     ],
     "repositoryUrl": "https://github.com/1xtr/go-sqs-consumer",
     "plugins": [
