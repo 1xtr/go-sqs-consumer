@@ -27,7 +27,7 @@ import (
 	"syscall"
 	"time"
 
-	consumer "github.com/1xtr/go-sqs-consumer"
+	consumer "github.com/1xtr/go-sqs-consumer/v2"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
@@ -69,8 +69,8 @@ func main() {
 	log.Debug().Msg("App was successful shutdown.")
 }
 
-func handler(ctx context.Context, msg *types.Message) error {
-	log := zerolog.Ctx(ctx).With().Str("MessageId", *msg.MessageId).
+func handler(msg *types.Message) error {
+	log := zerolog.Ctx(context.Background()).With().Str("MessageId", *msg.MessageId).
 		Str("component", "handler").Logger()
 
 	log.Info().Interface("message", msg).Msgf("message received")
