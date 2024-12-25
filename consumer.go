@@ -19,8 +19,10 @@ type (
 		sqsClient                   *sqs.Client
 		queueUrl                    string
 		handler                     func(m *types.Message) error
+		batchHandler                func(m []types.Message) error
 		stopSignal                  chan os.Signal
 		messagesChannel             chan types.Message
+		batchMessagesChannel        chan []types.Message
 		batchSize                   int
 		pollDelayInMs               time.Duration
 		visibilityTimeout           int
@@ -39,6 +41,7 @@ type (
 		MessageAttributeNames       []string
 		MessageSystemAttributeNames []types.MessageSystemAttributeName
 		HandleMessage               func(m *types.Message) error
+		HandleBatch                 func(m []types.Message) error
 		ShouldDeleteMessages        aws.Ternary
 	}
 )
@@ -53,8 +56,10 @@ func New(o Options) *Consumer {
 		queueUrl:                    o.QueueUrl,
 		sqsClient:                   o.SqsClient,
 		handler:                     o.HandleMessage,
+		batchHandler:                o.HandleBatch,
 		stopSignal:                  make(chan os.Signal, 1),
 		messagesChannel:             make(chan types.Message),
+		batchMessagesChannel:        make(chan []types.Message),
 		batchSize:                   o.BatchSize,
 		pollDelayInMs:               time.Duration(o.PollDelayInMs) * time.Millisecond,
 		visibilityTimeout:           o.VisibilityTimeout,
@@ -105,7 +110,11 @@ func (c *Consumer) Start() {
 	signal.Notify(c.stopSignal, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	// Start message processing in a single goroutine
-	go c.processMessages()
+	if c.batchHandler != nil {
+		go c.processBatchMessages() // Use batch handler if available
+	} else {
+		go c.processMessages()
+	}
 
 	// Poll messages in a loop
 	c.pollMessages()
@@ -114,19 +123,30 @@ func (c *Consumer) Start() {
 	<-c.stopSignal
 	logger.Debug("Shutdown signal received. Stopping...")
 	close(c.messagesChannel)
+	close(c.batchMessagesChannel)
 }
 
 // waitForProcessing ensures that all messages in the current batch are processed before fetching new messages.
 func (c *Consumer) waitForProcessing() {
-	// Wait for the message channel to drain
-	for {
-		// If the message channel is empty, wait for pollDelay before re-checking
-		if len(c.messagesChannel) == 0 {
-			time.Sleep(c.pollDelayInMs)
-			return
+	// Wait for the appropriate message channel to drain
+	if c.batchHandler != nil {
+		// Wait for batchMessagesChannel to drain
+		for {
+			if len(c.batchMessagesChannel) == 0 {
+				time.Sleep(c.pollDelayInMs)
+				return
+			}
+			time.Sleep(100 * time.Millisecond)
 		}
-		// If the message channel is not empty, wait for it to drain
-		time.Sleep(100 * time.Millisecond) // Small delay to re-check channel status
+	} else {
+		// Wait for messagesChannel to drain
+		for {
+			if len(c.messagesChannel) == 0 {
+				time.Sleep(c.pollDelayInMs)
+				return
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
 	}
 }
 
@@ -136,6 +156,7 @@ func (c *Consumer) pollMessages() {
 		case <-c.stopSignal:
 			logger.Debug("stop signal received, shutting down message receiver")
 			close(c.messagesChannel)
+			close(c.batchMessagesChannel)
 			return
 		default:
 			result, err := c.sqsClient.ReceiveMessage(
@@ -155,8 +176,12 @@ func (c *Consumer) pollMessages() {
 				return
 			}
 			if len(result.Messages) > 0 {
-				for _, message := range result.Messages {
-					c.messagesChannel <- message
+				if c.batchHandler != nil {
+					c.batchMessagesChannel <- result.Messages // Send to batch handler if available
+				} else {
+					for _, message := range result.Messages {
+						c.messagesChannel <- message
+					}
 				}
 			}
 
@@ -176,6 +201,23 @@ func (c *Consumer) processMessages() {
 		// Delete the message from SQS after successful processing
 		if c.shouldDeleteMessages {
 			go c.deleteMessage(&msg)
+		}
+	}
+}
+
+func (c *Consumer) processBatchMessages() {
+	for batch := range c.batchMessagesChannel {
+		err := c.batchHandler(batch)
+		if err != nil {
+			logger.Error(fmt.Sprintf("Error processing batch: %v\n", err))
+			continue
+		}
+
+		// Delete messages after successful processing
+		if c.shouldDeleteMessages {
+			for _, msg := range batch {
+				go c.deleteMessage(&msg)
+			}
 		}
 	}
 }
