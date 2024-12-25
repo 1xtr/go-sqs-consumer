@@ -92,6 +92,11 @@ func New(o Options) *Consumer {
 		c.shouldDeleteMessages = o.ShouldDeleteMessages.Bool()
 	}
 
+	// If pool delay not set use 100ms duration
+	if c.pollDelayInMs == 0 {
+		c.pollDelayInMs = 100 * time.Millisecond
+	}
+
 	return &c
 }
 
