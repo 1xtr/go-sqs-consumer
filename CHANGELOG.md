@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/1xtr/go-sqs-consumer/compare/v1.2.0...v1.2.1) (2024-12-25)
+
+
+### Bug Fixes
+
+* added default value 100ms for poll delay ([a67988a](https://github.com/1xtr/go-sqs-consumer/commit/a67988ada3cbe143bb036b28eebbdb524ab4771d))
+
 # [1.2.0](https://github.com/1xtr/go-sqs-consumer/compare/v1.1.0...v1.2.0) (2024-11-19)
 
 
