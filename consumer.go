@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/1xtr/go-sqs-consumer/logger"
+	"github.com/1xtr/go-sqs-consumer/v2/logger"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"

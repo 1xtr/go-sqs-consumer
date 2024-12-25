@@ -1,4 +1,4 @@
-module github.com/1xtr/go-sqs-consumer
+module github.com/1xtr/go-sqs-consumer/v2
 
 go 1.21
 
