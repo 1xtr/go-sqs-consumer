@@ -2,22 +2,23 @@ package consumer
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/1xtr/go-sqs-consumer/logger"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	"github.com/rs/zerolog"
 )
 
 type (
 	Consumer struct {
 		sqsClient                   *sqs.Client
 		queueUrl                    string
-		handler                     func(c context.Context, m *types.Message) error
+		handler                     func(m *types.Message) error
 		stopSignal                  chan os.Signal
 		messagesChannel             chan types.Message
 		batchSize                   int
@@ -27,7 +28,6 @@ type (
 		MessageAttributeNames       []string
 		messageSystemAttributeNames []types.MessageSystemAttributeName
 		shouldDeleteMessages        bool
-		logger                      zerolog.Logger
 	}
 	Options struct {
 		QueueUrl                    string
@@ -38,7 +38,7 @@ type (
 		WaitTimeSeconds             int
 		MessageAttributeNames       []string
 		MessageSystemAttributeNames []types.MessageSystemAttributeName
-		HandleMessage               func(c context.Context, m *types.Message) error
+		HandleMessage               func(m *types.Message) error
 		ShouldDeleteMessages        aws.Ternary
 	}
 )
@@ -62,7 +62,6 @@ func New(o Options) *Consumer {
 		MessageAttributeNames:       o.MessageAttributeNames,
 		messageSystemAttributeNames: o.MessageSystemAttributeNames,
 		shouldDeleteMessages:        true,
-		logger:                      GetLogger("Consumer"),
 	}
 	// If SQS Client not set, use default
 	if c.sqsClient == nil {
@@ -101,11 +100,7 @@ func New(o Options) *Consumer {
 }
 
 func (c *Consumer) Start() {
-	log := GetLogger("Start")
-
-	log.Debug().
-		Str("queue", c.queueUrl).
-		Msgf("consumer starting")
+	logger.Info(fmt.Sprintf("consumer starting proceed messages from queue: %s", c.queueUrl))
 
 	signal.Notify(c.stopSignal, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
@@ -117,7 +112,7 @@ func (c *Consumer) Start() {
 
 	// Wait for stop signal
 	<-c.stopSignal
-	c.logger.Debug().Msgf("Shutdown signal received. Stopping...")
+	logger.Debug("Shutdown signal received. Stopping...")
 	close(c.messagesChannel)
 }
 
@@ -136,11 +131,10 @@ func (c *Consumer) waitForProcessing() {
 }
 
 func (c *Consumer) pollMessages() {
-	log := GetLogger("pollMessages")
 	for {
 		select {
 		case <-c.stopSignal:
-			log.Debug().Msgf("stop signal received, shutting down message receiver")
+			logger.Debug("stop signal received, shutting down message receiver")
 			close(c.messagesChannel)
 			return
 		default:
@@ -157,10 +151,9 @@ func (c *Consumer) pollMessages() {
 			)
 
 			if err != nil {
-				log.Error().Err(err).Caller().Msgf("error receive messages: %v", err)
+				logger.Error(fmt.Sprintf("error receive messages: %v", err))
 				return
 			}
-			log.Debug().Interface("result", result).Msgf("pollMessages.result")
 			if len(result.Messages) > 0 {
 				for _, message := range result.Messages {
 					c.messagesChannel <- message
@@ -173,20 +166,16 @@ func (c *Consumer) pollMessages() {
 }
 
 func (c *Consumer) processMessages() {
-	ctx := Logger.WithContext(context.Background())
-	log := GetLogger("processMessages")
 	for msg := range c.messagesChannel {
-		err := c.handler(ctx, &msg)
+		err := c.handler(&msg)
 		if err != nil {
-			log.Error().Err(err).
-				Interface("message", msg).
-				Msgf("Error processing message: %v\n", err)
+			logger.Error(fmt.Sprintf("Error processing message: %v\n", err))
 			continue
 		}
 
 		// Delete the message from SQS after successful processing
 		if c.shouldDeleteMessages {
-			go c.deleteMessage(ctx, &msg)
+			go c.deleteMessage(&msg)
 		}
 	}
 }
@@ -196,12 +185,10 @@ func (c *Consumer) Stop() {
 	close(c.stopSignal)
 }
 
-func (c *Consumer) deleteMessage(ctx context.Context, msg *types.Message) {
-	log := zerolog.Ctx(ctx).With().Str("MessageId", *msg.MessageId).
-		Str("component", "deleteMessage").Logger()
+func (c *Consumer) deleteMessage(msg *types.Message) {
 	// Delete the message from SQS after successful processing
 	if c.shouldDeleteMessages {
-		log.Debug().Msgf("deleting message %s", *msg.MessageId)
+		logger.Debug(fmt.Sprintf("deleting message %s", *msg.MessageId))
 		_, err := c.sqsClient.DeleteMessage(
 			context.Background(), &sqs.DeleteMessageInput{
 				QueueUrl:      &c.queueUrl,
@@ -209,7 +196,7 @@ func (c *Consumer) deleteMessage(ctx context.Context, msg *types.Message) {
 			},
 		)
 		if err != nil {
-			log.Error().Err(err).Msgf("error deleting message %v", err)
+			logger.Error(fmt.Sprintf("error deleting message %v", err))
 		}
 	}
 }
