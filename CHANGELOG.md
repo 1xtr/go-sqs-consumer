@@ -1,3 +1,20 @@
+# [2.0.0](https://github.com/1xtr/go-sqs-consumer/compare/v1.2.1...v2.0.0) (2024-12-25)
+
+
+### Code Refactoring
+
+* remove ctx from handler args ([772f351](https://github.com/1xtr/go-sqs-consumer/commit/772f35132e88a6502c18bb5b6d645a89d1e5aed1))
+
+
+### Features
+
+* add new logger ([59db623](https://github.com/1xtr/go-sqs-consumer/commit/59db6230f086b1a3b79fab538a68c4bcf4275ce9))
+
+
+### BREAKING CHANGES
+
+* added new logger
+
 ## [1.2.1](https://github.com/1xtr/go-sqs-consumer/compare/v1.2.0...v1.2.1) (2024-12-25)
 
 
