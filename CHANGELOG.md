@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/1xtr/go-sqs-consumer/compare/v2.1.0...v2.1.1) (2024-12-26)
+
+
+### Bug Fixes
+
+* throw args as objects pointer instead ([aae9e98](https://github.com/1xtr/go-sqs-consumer/commit/aae9e9828fbca7950068e6b716e1ad23906a94ec))
+
 # [2.1.0](https://github.com/1xtr/go-sqs-consumer/compare/v2.0.0...v2.1.0) (2024-12-25)
 
 
