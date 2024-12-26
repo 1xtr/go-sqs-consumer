@@ -18,7 +18,7 @@ type (
 	Consumer struct {
 		sqsClient                   *sqs.Client
 		queueUrl                    string
-		handler                     func(m *types.Message) error
+		handler                     func(m types.Message) error
 		batchHandler                func(m []types.Message) error
 		stopSignal                  chan os.Signal
 		messagesChannel             chan types.Message
@@ -40,7 +40,7 @@ type (
 		WaitTimeSeconds             int
 		MessageAttributeNames       []string
 		MessageSystemAttributeNames []types.MessageSystemAttributeName
-		HandleMessage               func(m *types.Message) error
+		HandleMessage               func(m types.Message) error
 		HandleBatch                 func(m []types.Message) error
 		ShouldDeleteMessages        aws.Ternary
 	}
@@ -192,7 +192,7 @@ func (c *Consumer) pollMessages() {
 
 func (c *Consumer) processMessages() {
 	for msg := range c.messagesChannel {
-		err := c.handler(&msg)
+		err := c.handler(msg)
 		if err != nil {
 			logger.Error(fmt.Sprintf("Error processing message: %v\n", err))
 			continue
@@ -200,7 +200,7 @@ func (c *Consumer) processMessages() {
 
 		// Delete the message from SQS after successful processing
 		if c.shouldDeleteMessages {
-			go c.deleteMessage(&msg)
+			go c.deleteMessage(msg)
 		}
 	}
 }
@@ -216,7 +216,7 @@ func (c *Consumer) processBatchMessages() {
 		// Delete messages after successful processing
 		if c.shouldDeleteMessages {
 			for _, msg := range batch {
-				go c.deleteMessage(&msg)
+				go c.deleteMessage(msg)
 			}
 		}
 	}
@@ -227,7 +227,7 @@ func (c *Consumer) Stop() {
 	close(c.stopSignal)
 }
 
-func (c *Consumer) deleteMessage(msg *types.Message) {
+func (c *Consumer) deleteMessage(msg types.Message) {
 	// Delete the message from SQS after successful processing
 	if c.shouldDeleteMessages {
 		logger.Debug(fmt.Sprintf("deleting message %s", *msg.MessageId))
